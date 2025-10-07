@@ -1,1 +1,82 @@
+# Workflow: Gestion Artefacts
+# Description: Démonstration de la création, upload et download d'artefacts entre jobs
+# Montre comment partager des fichiers entre différents jobs d'un workflow
 
+name: Gestion Artefacts
+
+# Déclenchement manuel pour plus de contrôle
+on: [workflow_dispatch]
+
+jobs:
+  # Job: Génération des fichiers et artefacts
+  # Objectif: Créer des fichiers de test et les uploader en tant qu'artefacts
+  generation:
+    runs-on: ubuntu-latest
+    
+    steps:
+    # Étape: Création des fichiers de test
+    - name: Créer fichiers test
+      run: |
+        # Création de fichiers texte et JSON
+        echo "Fichier de configuration" > config.txt
+        echo '{"build": "data", "timestamp": "'$(date)'"}' > data.json
+        
+        # Création d'un répertoire avec des logs
+        mkdir -p logs
+        echo "Logs système - $(date)" > logs/system.log
+        
+        # Vérification de la création des fichiers
+        echo "Fichiers créés:"
+        ls -la
+        echo "Contenu du dossier logs:"
+        ls -la logs/
+    
+    # Étape: Upload des artefacts pour partage entre jobs
+    # IMPORTANT: Cette étape doit être dans le MÊME job que la création des fichiers
+    - name: Upload artefacts
+      uses: actions/upload-artifact@v4
+      with:
+        # Nom unique de l'artefact pour référence ultérieure
+        name: bundle-production
+        
+        # Patterns de fichiers à inclure dans l'artefact
+        path: |
+          *.txt
+          *.json
+          logs/
+        
+        # Durée de rétention automatique (7 jours)
+        retention-days: 7
+
+  # Job: Vérification des artefacts téléchargés
+  # Objectif: Télécharger et vérifier les artefacts du job précédent
+  # IMPORTANT: Ce job dépend du job 'generation' via 'needs'
+  verification:
+    runs-on: ubuntu-latest
+    needs: generation  # Dépendance critique: assure que le job generation est terminé
+    
+    steps:
+    # Étape: Download des artefacts du job précédent
+    - name: Download artefacts
+      uses: actions/download-artifact@v4
+      with:
+        # Doit correspondre exactement au nom utilisé dans l'upload
+        name: bundle-production
+      
+    # Étape: Vérification du contenu téléchargé
+    - name: Lister fichiers
+      run: |
+        # Affiche la structure des fichiers téléchargés
+        echo "=== Structure des fichiers téléchargés ==="
+        ls -la
+        
+        echo "=== Contenu des fichiers ==="
+        echo "--- config.txt ---"
+        cat config.txt
+        echo "--- data.json ---"
+        cat data.json
+        
+        echo "=== Contenu du dossier logs ==="
+        ls -la logs/
+        echo "--- logs/system.log ---"
+        cat logs/system.log
