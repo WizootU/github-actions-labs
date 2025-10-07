@@ -1,0 +1,44 @@
+# Workflow: Déclencheurs Avancés
+# Description: Ce workflow démontre différents types de déclencheurs GitHub Actions
+# Il s'exécute sur divers événements de repository et inclut une planification horaire
+
+name: Déclencheurs Avancés
+
+# Définition des événements qui déclenchent l'exécution du workflow
+on:
+  # Déclenchement sur les événements d'issues
+  issues:
+    # Types spécifiques d'événements d'issue à surveiller
+    types: [opened, closed]  # Se déclenche à l'ouverture et fermeture d'issues
+   
+  # Déclenchement sur les événements de pull request
+  pull_request:
+    # Types spécifiques d'événements de PR à surveiller
+    types: [opened, synchronize]  # Se déclenche à l'ouverture et mise à jour de PR
+   
+  # Déclenchement planifié selon une expression cron
+  schedule:
+    # Exécution tous les lundis à 10h00
+    - cron: '0 10 * * 1'  # Lundi 10h00 (format: minute heure jour-mois mois jour-semaine)
+
+# Définition des jobs à exécuter
+jobs:
+  # Job: Journalisation des événements
+  # Objectif: Logger les informations contextuelles sur l'événement déclencheur
+  log-evenement:
+    # Environnement d'exécution: dernière version d'Ubuntu
+    runs-on: ubuntu-latest
+    
+    # Étapes séquentielles du job
+    steps:
+    # Étape: Affichage des informations d'événement
+    - name: Afficher infos
+      run: |
+        # Affiche le type d'événement GitHub qui a déclenché le workflow
+        echo "Événement: ${{ github.event_name }}"
+        
+        # Affiche l'action spécifique au sein de l'événement
+        echo "Action: ${{ github.event.action }}"
+        
+        # Affiche l'utilisateur qui a initié l'événement
+        echo "Déclenché par: ${{ github.actor }}"
